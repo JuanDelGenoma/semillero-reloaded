@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useMemo, useState } from 'react'
 import type { User } from '@supabase/supabase-js'
 import { supabase } from '@/integrations/supabase/client'
+import { SITE_BASE } from '@/lib/utils'
 
 interface AuthContextValue {
   user: User | null
@@ -62,7 +63,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const { data, error } = await supabase.auth.signUp({
           email,
           password,
-          options: { emailRedirectTo: `${window.location.origin}/cuenta` },
+          options: { emailRedirectTo: `${window.location.origin}${SITE_BASE}/cuenta` },
         })
         if (error) throw error
         return !data.session
@@ -73,7 +74,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       },
       recover: async (email) => {
         const { error } = await supabase.auth.resetPasswordForEmail(email, {
-          redirectTo: `${window.location.origin}/cuenta`,
+          redirectTo: `${window.location.origin}${SITE_BASE}/cuenta`,
         })
         if (error) throw error
       },

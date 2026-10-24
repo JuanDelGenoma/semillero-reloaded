@@ -13,6 +13,7 @@ import {
 } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
+import { SITE_BASE } from '@/lib/utils'
 import { Crest } from '@/components/game/crest'
 import { CATEGORIES } from '@/game/categories'
 import { CLUBS } from '@/game/data/clubs'
@@ -22,7 +23,7 @@ export const Route = createFileRoute('/')({
   component: Home,
 })
 
-const hero = '/img/hero.jpg'
+const hero = `${SITE_BASE}/img/hero.jpg`
 
 const FEATURES = [
   {
