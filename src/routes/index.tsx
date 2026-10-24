@@ -22,7 +22,7 @@ export const Route = createFileRoute('/')({
   component: Home,
 })
 
-const hero = '/img/hero.jpg'
+const hero = `${SITE_BASE}/img/hero.jpg`
 
 const FEATURES = [
   {

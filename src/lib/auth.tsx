@@ -62,7 +62,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const { data, error } = await supabase.auth.signUp({
           email,
           password,
-          options: { emailRedirectTo: `${window.location.origin}/cuenta` },
+          options: { emailRedirectTo: `${window.location.origin}${SITE_BASE}/cuenta` },
         })
         if (error) throw error
         return !data.session
@@ -73,7 +73,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       },
       recover: async (email) => {
         const { error } = await supabase.auth.resetPasswordForEmail(email, {
-          redirectTo: `${window.location.origin}/cuenta`,
+          redirectTo: `${window.location.origin}${SITE_BASE}/cuenta`,
         })
         if (error) throw error
       },
