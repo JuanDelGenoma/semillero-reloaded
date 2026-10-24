@@ -1,0 +1,71 @@
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# One deployment at a time; new pushes replace queued ones.
+concurrency:
+  group: github-pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+
+      - name: Compute base path
+        id: base
+        run: |
+          repo="${GITHUB_REPOSITORY#*/}"
+          owner="${GITHUB_REPOSITORY%/*}"
+          # User/org pages repos (owner.github.io) are served at the root;
+          # project repos are served from /<repo-name>/.
+          if [ "$repo" = "$owner.github.io" ]; then
+            echo "path=" >> "$GITHUB_OUTPUT"
+          else
+            echo "path=/$repo" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Build
+        env:
+          BASE_PATH: ${{ steps.base.outputs.path }}
+          VITE_SUPABASE_PROJECT_ID: zepghnfbewxfduosptdt
+          VITE_SUPABASE_PUBLISHABLE_KEY: sb_publishable_42n1zacHd7tBubt8rt1iuA_SX_sC_S_
+          VITE_SUPABASE_URL: https://zepghnfbewxfduosptdt.supabase.co
+        run: bun run build
+
+      # Serve the app shell for unknown routes so the client router can take
+      # over (deep links to /cargar, /juego/... resolve after hydration).
+      - name: Add SPA fallback
+        run: |
+          cp dist/client/index.html dist/client/404.html
+          touch dist/client/.nojekyll
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist/client
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
