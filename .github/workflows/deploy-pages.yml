@@ -51,14 +51,14 @@ jobs:
       # over (deep links to /cargar, /juego/... resolve after hydration).
       - name: Add SPA fallback
         run: |
-          cp dist/client/index.html dist/client/404.html
-          touch dist/client/.nojekyll
+          cp .output/public/index.html .output/public/404.html
+          touch .output/public/.nojekyll
 
       - uses: actions/configure-pages@v5
 
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: dist/client
+          path: .output/public
 
   deploy:
     needs: build
