@@ -10,33 +10,171 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as CargarRouteImport } from './routes/cargar'
+import { Route as CuentaRouteImport } from './routes/cuenta'
+import { Route as JuegoRouteImport } from './routes/juego'
+import { Route as NuevaRouteImport } from './routes/nueva'
+import { Route as JuegoIndexRouteImport } from './routes/juego/index'
+import { Route as JuegoAlineacionRouteImport } from './routes/juego/alineacion'
+import { Route as JuegoCaptacionRouteImport } from './routes/juego/captacion'
+import { Route as JuegoInternacionalRouteImport } from './routes/juego/internacional'
+import { Route as JuegoPartidosRouteImport } from './routes/juego/partidos'
+import { Route as JuegoPlantelRouteImport } from './routes/juego/plantel'
+import { Route as JuegoTablasRouteImport } from './routes/juego/tablas'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CargarRoute = CargarRouteImport.update({
+  id: '/cargar',
+  path: '/cargar',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CuentaRoute = CuentaRouteImport.update({
+  id: '/cuenta',
+  path: '/cuenta',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const JuegoRoute = JuegoRouteImport.update({
+  id: '/juego',
+  path: '/juego',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const NuevaRoute = NuevaRouteImport.update({
+  id: '/nueva',
+  path: '/nueva',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const JuegoIndexRoute = JuegoIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => JuegoRoute,
+} as any)
+const JuegoAlineacionRoute = JuegoAlineacionRouteImport.update({
+  id: '/alineacion',
+  path: '/alineacion',
+  getParentRoute: () => JuegoRoute,
+} as any)
+const JuegoCaptacionRoute = JuegoCaptacionRouteImport.update({
+  id: '/captacion',
+  path: '/captacion',
+  getParentRoute: () => JuegoRoute,
+} as any)
+const JuegoInternacionalRoute = JuegoInternacionalRouteImport.update({
+  id: '/internacional',
+  path: '/internacional',
+  getParentRoute: () => JuegoRoute,
+} as any)
+const JuegoPartidosRoute = JuegoPartidosRouteImport.update({
+  id: '/partidos',
+  path: '/partidos',
+  getParentRoute: () => JuegoRoute,
+} as any)
+const JuegoPlantelRoute = JuegoPlantelRouteImport.update({
+  id: '/plantel',
+  path: '/plantel',
+  getParentRoute: () => JuegoRoute,
+} as any)
+const JuegoTablasRoute = JuegoTablasRouteImport.update({
+  id: '/tablas',
+  path: '/tablas',
+  getParentRoute: () => JuegoRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/cargar': typeof CargarRoute
+  '/cuenta': typeof CuentaRoute
+  '/juego': typeof JuegoRouteWithChildren
+  '/nueva': typeof NuevaRoute
+  '/juego/alineacion': typeof JuegoAlineacionRoute
+  '/juego/captacion': typeof JuegoCaptacionRoute
+  '/juego/internacional': typeof JuegoInternacionalRoute
+  '/juego/partidos': typeof JuegoPartidosRoute
+  '/juego/plantel': typeof JuegoPlantelRoute
+  '/juego/tablas': typeof JuegoTablasRoute
+  '/juego/': typeof JuegoIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/cargar': typeof CargarRoute
+  '/cuenta': typeof CuentaRoute
+  '/nueva': typeof NuevaRoute
+  '/juego/alineacion': typeof JuegoAlineacionRoute
+  '/juego/captacion': typeof JuegoCaptacionRoute
+  '/juego/internacional': typeof JuegoInternacionalRoute
+  '/juego/partidos': typeof JuegoPartidosRoute
+  '/juego/plantel': typeof JuegoPlantelRoute
+  '/juego/tablas': typeof JuegoTablasRoute
+  '/juego': typeof JuegoIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/cargar': typeof CargarRoute
+  '/cuenta': typeof CuentaRoute
+  '/juego': typeof JuegoRouteWithChildren
+  '/nueva': typeof NuevaRoute
+  '/juego/alineacion': typeof JuegoAlineacionRoute
+  '/juego/captacion': typeof JuegoCaptacionRoute
+  '/juego/internacional': typeof JuegoInternacionalRoute
+  '/juego/partidos': typeof JuegoPartidosRoute
+  '/juego/plantel': typeof JuegoPlantelRoute
+  '/juego/tablas': typeof JuegoTablasRoute
+  '/juego/': typeof JuegoIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/cargar'
+    | '/cuenta'
+    | '/juego'
+    | '/nueva'
+    | '/juego/alineacion'
+    | '/juego/captacion'
+    | '/juego/internacional'
+    | '/juego/partidos'
+    | '/juego/plantel'
+    | '/juego/tablas'
+    | '/juego/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/cargar'
+    | '/cuenta'
+    | '/nueva'
+    | '/juego/alineacion'
+    | '/juego/captacion'
+    | '/juego/internacional'
+    | '/juego/partidos'
+    | '/juego/plantel'
+    | '/juego/tablas'
+    | '/juego'
+  id:
+    | '__root__'
+    | '/'
+    | '/cargar'
+    | '/cuenta'
+    | '/juego'
+    | '/nueva'
+    | '/juego/alineacion'
+    | '/juego/captacion'
+    | '/juego/internacional'
+    | '/juego/partidos'
+    | '/juego/plantel'
+    | '/juego/tablas'
+    | '/juego/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  CargarRoute: typeof CargarRoute
+  CuentaRoute: typeof CuentaRoute
+  JuegoRoute: typeof JuegoRouteWithChildren
+  NuevaRoute: typeof NuevaRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -48,11 +186,114 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/cargar': {
+      id: '/cargar'
+      path: '/cargar'
+      fullPath: '/cargar'
+      preLoaderRoute: typeof CargarRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/cuenta': {
+      id: '/cuenta'
+      path: '/cuenta'
+      fullPath: '/cuenta'
+      preLoaderRoute: typeof CuentaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/juego': {
+      id: '/juego'
+      path: '/juego'
+      fullPath: '/juego'
+      preLoaderRoute: typeof JuegoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/nueva': {
+      id: '/nueva'
+      path: '/nueva'
+      fullPath: '/nueva'
+      preLoaderRoute: typeof NuevaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/juego/': {
+      id: '/juego/'
+      path: '/'
+      fullPath: '/juego/'
+      preLoaderRoute: typeof JuegoIndexRouteImport
+      parentRoute: typeof JuegoRoute
+    }
+    '/juego/alineacion': {
+      id: '/juego/alineacion'
+      path: '/alineacion'
+      fullPath: '/juego/alineacion'
+      preLoaderRoute: typeof JuegoAlineacionRouteImport
+      parentRoute: typeof JuegoRoute
+    }
+    '/juego/captacion': {
+      id: '/juego/captacion'
+      path: '/captacion'
+      fullPath: '/juego/captacion'
+      preLoaderRoute: typeof JuegoCaptacionRouteImport
+      parentRoute: typeof JuegoRoute
+    }
+    '/juego/internacional': {
+      id: '/juego/internacional'
+      path: '/internacional'
+      fullPath: '/juego/internacional'
+      preLoaderRoute: typeof JuegoInternacionalRouteImport
+      parentRoute: typeof JuegoRoute
+    }
+    '/juego/partidos': {
+      id: '/juego/partidos'
+      path: '/partidos'
+      fullPath: '/juego/partidos'
+      preLoaderRoute: typeof JuegoPartidosRouteImport
+      parentRoute: typeof JuegoRoute
+    }
+    '/juego/plantel': {
+      id: '/juego/plantel'
+      path: '/plantel'
+      fullPath: '/juego/plantel'
+      preLoaderRoute: typeof JuegoPlantelRouteImport
+      parentRoute: typeof JuegoRoute
+    }
+    '/juego/tablas': {
+      id: '/juego/tablas'
+      path: '/tablas'
+      fullPath: '/juego/tablas'
+      preLoaderRoute: typeof JuegoTablasRouteImport
+      parentRoute: typeof JuegoRoute
+    }
   }
 }
 
+interface JuegoRouteChildren {
+  JuegoAlineacionRoute: typeof JuegoAlineacionRoute
+  JuegoCaptacionRoute: typeof JuegoCaptacionRoute
+  JuegoInternacionalRoute: typeof JuegoInternacionalRoute
+  JuegoPartidosRoute: typeof JuegoPartidosRoute
+  JuegoPlantelRoute: typeof JuegoPlantelRoute
+  JuegoTablasRoute: typeof JuegoTablasRoute
+  JuegoIndexRoute: typeof JuegoIndexRoute
+}
+
+const JuegoRouteChildren: JuegoRouteChildren = {
+  JuegoAlineacionRoute: JuegoAlineacionRoute,
+  JuegoCaptacionRoute: JuegoCaptacionRoute,
+  JuegoInternacionalRoute: JuegoInternacionalRoute,
+  JuegoPartidosRoute: JuegoPartidosRoute,
+  JuegoPlantelRoute: JuegoPlantelRoute,
+  JuegoTablasRoute: JuegoTablasRoute,
+  JuegoIndexRoute: JuegoIndexRoute,
+}
+
+const JuegoRouteWithChildren = JuegoRoute._addFileChildren(JuegoRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  CargarRoute: CargarRoute,
+  CuentaRoute: CuentaRoute,
+  JuegoRoute: JuegoRouteWithChildren,
+  NuevaRoute: NuevaRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
