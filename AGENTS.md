@@ -8,3 +8,6 @@
 > Commits you push to the connected branch sync back to Lovable and show up in
 > the editor, so keep the branch in a working state.
 <!-- LOVABLE:END -->
+
+- Game logic lives in src/game (pure TS, tested in engine.test.ts); keep UI out of it so simulations stay testable.
+- Career saves use the `careers` table via the browser client with per-user RLS (src/lib/saves.ts); one row per user and slot.

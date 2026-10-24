@@ -1,21 +1,17 @@
-# Routes
+# Routing
 
-TanStack Start uses **file-based routing**. Every `.tsx` file in this directory
-defines a route. Do **not** create `src/pages/`, `src/routes/_app/index.tsx`, or
-`app/layout.tsx` — those are Next.js / Remix conventions. The only root layout
-is `src/routes/__root.tsx`.
+TanStack Start uses file-based routing in `src/routes`. Keep the app shell in `__root.tsx`; its `children` render the matched routes. Don't replace it with a Next.js `app/layout.tsx` or create a second `src/pages` router.
 
-## Conventions
+| File                      | URL                                                |
+| ------------------------- | -------------------------------------------------- |
+| `index.tsx`               | `/`                                                |
+| `about.tsx`               | `/about`                                           |
+| `products/$productId.tsx` | `/products/:productId`                             |
+| `_layout.tsx`             | Pathless layout; render its children with `Outlet` |
+| `api.items.ts`            | `/api/items`, using server handlers                |
 
-| File | URL |
-| --- | --- |
-| `index.tsx` | `/` |
-| `about.tsx` | `/about` |
-| `users/index.tsx` | `/users` |
-| `users/$id.tsx` | `/users/:id` (dynamic — bare `$`, no curly braces) |
-| `posts/{-$category}.tsx` | `/posts/:category?` (optional segment) |
-| `files/$.tsx` | `/files/*` (splat — read via `_splat` param, never `*`) |
-| `_layout.tsx` | layout route (renders children via `<Outlet />`) |
-| `__root.tsx` | app shell — wraps every page; preserve `<Outlet />` |
+Route files use `createFileRoute`. `src/routeTree.gen.ts` is generated; don't edit it. Router types are registered in `src/router.tsx`.
 
-`routeTree.gen.ts` is auto-generated. Don't edit it by hand.
+Link to dynamic routes with `to="/products/$productId"` and `params={{ productId }}`. Avoid interpolating paths into strings that bypass route checks.
+
+The root route supplies a 404 page. The router's default error component supplies retry/home actions, including for child-route SSR failures. In a loader, `throw notFound()` from `@tanstack/react-router` for missing records. Throw unexpected failures normally so the error page handles them. Add route-specific `head()` metadata for individual articles or products; otherwise the root metadata is inherited.
