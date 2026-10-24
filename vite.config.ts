@@ -21,6 +21,9 @@ export default defineConfig({
     server: { entry: "server" },
     // Every route is a static path with no loader, so all of them can be
     // prerendered to HTML — required for GitHub Pages (static hosting only).
-    prerender: { enabled: true },
+    // The crawler requests each page with a trailing slash and the server
+    // answers with a 307 to the canonical path; the Lovable default of
+    // maxRedirects: 0 treats that as an error, so allow the one hop.
+    prerender: { enabled: true, maxRedirects: 5 },
   },
 });
