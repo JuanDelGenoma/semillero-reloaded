@@ -1,0 +1,7 @@
+[
+{"capability":"code","source":"zip","outcome":"migrate","status":"in_progress","next_action":"port"},
+{"capability":"schema careers","source":"Netlify Database","outcome":"migrate","status":"in_progress","next_action":"create table"},
+{"capability":"records","source":"Netlify Database","outcome":"migrate","status":"pending","next_action":"request export"},
+{"capability":"auth","source":"Netlify Identity","outcome":"migrate","status":"in_progress","next_action":"Lovable Cloud auth"},
+{"capability":"user identities","source":"Netlify Identity","outcome":"migrate","status":"pending","next_action":"request user export"}
+]
