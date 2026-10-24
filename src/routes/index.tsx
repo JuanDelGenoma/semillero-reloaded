@@ -22,7 +22,7 @@ export const Route = createFileRoute('/')({
   component: Home,
 })
 
-const hero = (w: number) => `/.netlify/images?url=/img/hero.png&w=${w}&fm=webp&q=72`
+const hero = '/img/hero.jpg'
 
 const FEATURES = [
   {
@@ -71,9 +71,7 @@ function Home() {
     <div className="min-h-screen">
       <section className="relative isolate overflow-hidden bg-primary text-primary-foreground">
         <img
-          src={hero(1600)}
-          srcSet={`${hero(800)} 800w, ${hero(1600)} 1600w, ${hero(2400)} 2400w`}
-          sizes="100vw"
+          src={hero}
           alt="Chicos de inferiores entrenando al atardecer en un predio del conurbano"
           className="absolute inset-0 -z-10 size-full object-cover"
         />
