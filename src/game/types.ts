@@ -87,6 +87,24 @@ export interface RivalPlayer {
   ovr: number
 }
 
+export interface MatchPlayer {
+  id: string
+  name: string
+  line: Line
+}
+
+export type SubReason = 'tactical' | 'injury' | 'red'
+
+export interface SubEvent {
+  minute: number
+  clubId: string
+  offId: string
+  offName: string
+  onId: string
+  onName: string
+  reason: SubReason
+}
+
 export interface GoalEvent {
   minute: number
   clubId: string
@@ -116,7 +134,12 @@ export interface Match {
   awayGoals: number
   goals: GoalEvent[]
   cards: CardEvent[]
-  injuries: { playerId: string; playerName: string; clubId: string }[]
+  injuries: { playerId: string; playerName: string; clubId: string; minute: number }[]
+  homeStarters: MatchPlayer[]
+  awayStarters: MatchPlayer[]
+  homeBench: MatchPlayer[]
+  awayBench: MatchPlayer[]
+  subs: SubEvent[]
 }
 
 export interface StandingRow {
@@ -281,6 +304,8 @@ export interface GameState {
   rivals: Record<string, Partial<Record<CategoryId, RivalPlayer[]>>>
   matches: Match[]
   lineups: Partial<Record<CategoryId, (string | null)[]>>
+  /** Seven substitutes per category (first slot is the backup goalkeeper). */
+  benches: Partial<Record<CategoryId, (string | null)[]>>
   news: NewsItem[]
   seasonOver: boolean
   history: SeasonSummary[]

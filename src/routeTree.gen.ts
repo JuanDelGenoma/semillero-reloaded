@@ -10,8 +10,6 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as CargarRouteImport } from './routes/cargar'
-import { Route as CuentaRouteImport } from './routes/cuenta'
 import { Route as JuegoRouteImport } from './routes/juego'
 import { Route as NuevaRouteImport } from './routes/nueva'
 import { Route as JuegoIndexRouteImport } from './routes/juego/index'
@@ -25,16 +23,6 @@ import { Route as JuegoTablasRouteImport } from './routes/juego/tablas'
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const CargarRoute = CargarRouteImport.update({
-  id: '/cargar',
-  path: '/cargar',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const CuentaRoute = CuentaRouteImport.update({
-  id: '/cuenta',
-  path: '/cuenta',
   getParentRoute: () => rootRouteImport,
 } as any)
 const JuegoRoute = JuegoRouteImport.update({
@@ -85,8 +73,6 @@ const JuegoTablasRoute = JuegoTablasRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/cargar': typeof CargarRoute
-  '/cuenta': typeof CuentaRoute
   '/juego': typeof JuegoRouteWithChildren
   '/nueva': typeof NuevaRoute
   '/juego/alineacion': typeof JuegoAlineacionRoute
@@ -99,8 +85,6 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/cargar': typeof CargarRoute
-  '/cuenta': typeof CuentaRoute
   '/nueva': typeof NuevaRoute
   '/juego/alineacion': typeof JuegoAlineacionRoute
   '/juego/captacion': typeof JuegoCaptacionRoute
@@ -113,8 +97,6 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/cargar': typeof CargarRoute
-  '/cuenta': typeof CuentaRoute
   '/juego': typeof JuegoRouteWithChildren
   '/nueva': typeof NuevaRoute
   '/juego/alineacion': typeof JuegoAlineacionRoute
@@ -129,8 +111,6 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
-    | '/cargar'
-    | '/cuenta'
     | '/juego'
     | '/nueva'
     | '/juego/alineacion'
@@ -143,8 +123,6 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
-    | '/cargar'
-    | '/cuenta'
     | '/nueva'
     | '/juego/alineacion'
     | '/juego/captacion'
@@ -156,8 +134,6 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
-    | '/cargar'
-    | '/cuenta'
     | '/juego'
     | '/nueva'
     | '/juego/alineacion'
@@ -171,8 +147,6 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  CargarRoute: typeof CargarRoute
-  CuentaRoute: typeof CuentaRoute
   JuegoRoute: typeof JuegoRouteWithChildren
   NuevaRoute: typeof NuevaRoute
 }
@@ -184,20 +158,6 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/cargar': {
-      id: '/cargar'
-      path: '/cargar'
-      fullPath: '/cargar'
-      preLoaderRoute: typeof CargarRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/cuenta': {
-      id: '/cuenta'
-      path: '/cuenta'
-      fullPath: '/cuenta'
-      preLoaderRoute: typeof CuentaRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/juego': {
@@ -290,8 +250,6 @@ const JuegoRouteWithChildren = JuegoRoute._addFileChildren(JuegoRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  CargarRoute: CargarRoute,
-  CuentaRoute: CuentaRoute,
   JuegoRoute: JuegoRouteWithChildren,
   NuevaRoute: NuevaRoute,
 }
@@ -300,11 +258,10 @@ export const routeTree = rootRouteImport
   ._addFileTypes<FileRouteTypes>()
 
 import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
+import type { createStart } from '@tanstack/react-start'
 declare module '@tanstack/react-start' {
   interface Register {
     ssr: true
     router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
   }
 }

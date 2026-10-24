@@ -49,6 +49,11 @@ export function makeFixtures(
           goals: [],
           cards: [],
           injuries: [],
+          homeStarters: [],
+          awayStarters: [],
+          homeBench: [],
+          awayBench: [],
+          subs: [],
         })
       }
     }

@@ -72,6 +72,9 @@ export function removePlayer(state: GameState, playerId: string) {
   for (const k of Object.keys(state.lineups) as (keyof GameState['lineups'])[]) {
     state.lineups[k] = state.lineups[k]?.map((id) => (id === playerId ? null : id))
   }
+  for (const k of Object.keys(state.benches) as (keyof GameState['benches'])[]) {
+    state.benches[k] = state.benches[k]?.map((id) => (id === playerId ? null : id))
+  }
   if (state.messiCup.squad) state.messiCup.squad = state.messiCup.squad.filter((id) => id !== playerId)
   state.decisions = state.decisions.filter((d) => d.playerId !== playerId)
 }

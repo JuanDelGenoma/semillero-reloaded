@@ -1,7 +1,17 @@
 import { createContext, useContext, useEffect, useMemo, useState } from 'react'
-import type { User } from '@supabase/supabase-js'
-import { supabase } from '@/integrations/supabase/client'
-import { SITE_BASE } from '@/lib/utils'
+import {
+  AuthError,
+  MissingIdentityError,
+  getUser,
+  handleAuthCallback,
+  login,
+  logout,
+  onAuthChange,
+  requestPasswordRecovery,
+  signup,
+  updateUser,
+  type User,
+} from '@netlify/identity'
 
 interface AuthContextValue {
   user: User | null
@@ -19,17 +29,16 @@ interface AuthContextValue {
 
 const AuthContext = createContext<AuthContextValue | null>(null)
 
-/** Turns auth errors into Spanish messages for the UI. */
+/** Turns Identity errors into Spanish messages for the UI. */
 export function authMessage(error: unknown) {
-  const msg = error instanceof Error ? error.message.toLowerCase() : ''
-  const status = (error as { status?: number } | null)?.status
-  if (msg.includes('invalid login') || msg.includes('not confirmed'))
-    return 'Email o contraseña incorrectos, o falta confirmar el email.'
-  if (msg.includes('signups not allowed')) return 'El registro de cuentas está cerrado.'
-  if (msg.includes('password') || status === 422)
-    return 'Revisá el email y usá una contraseña de al menos 8 caracteres.'
-  if (status === 429 || msg.includes('rate limit')) return 'Demasiados intentos. Esperá unos minutos.'
-  if (error instanceof Error && error.message) return error.message
+  if (error instanceof MissingIdentityError) return 'Las cuentas no están disponibles en este momento.'
+  if (error instanceof AuthError) {
+    if (error.status === 401) return 'Email o contraseña incorrectos, o falta confirmar el email.'
+    if (error.status === 403) return 'El registro de cuentas está cerrado.'
+    if (error.status === 422) return 'Revisá el email y usá una contraseña de al menos 8 caracteres.'
+    if (error.status === 429) return 'Demasiados intentos. Esperá unos minutos.'
+    return error.message
+  }
   return 'No se pudo conectar. Probá de nuevo.'
 }
 
@@ -39,15 +48,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [recovering, setRecovering] = useState(false)
 
   useEffect(() => {
-    const { data } = supabase.auth.onAuthStateChange((event, session) => {
-      setUser(session?.user ?? null)
-      if (event === 'PASSWORD_RECOVERY') setRecovering(true)
+    let alive = true
+    const unsubscribe = onAuthChange((event, u) => {
+      setUser(u)
+      if (event === 'recovery') setRecovering(true)
     })
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null)
-      setReady(true)
-    })
-    return () => data.subscription.unsubscribe()
+    ;(async () => {
+      try {
+        const result = await handleAuthCallback()
+        if (result?.type === 'recovery') setRecovering(true)
+      } catch {
+        // An invalid or expired link: fall through to the normal session.
+      }
+      const u = await getUser()
+      if (alive) {
+        setUser(u)
+        setReady(true)
+      }
+    })()
+    return () => {
+      alive = false
+      unsubscribe()
+    }
   }, [])
 
   const value = useMemo<AuthContextValue>(
@@ -56,31 +78,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       ready,
       recovering,
       signIn: async (email, password) => {
-        const { error } = await supabase.auth.signInWithPassword({ email, password })
-        if (error) throw error
+        setUser(await login(email, password))
       },
       signUp: async (email, password) => {
-        const { data, error } = await supabase.auth.signUp({
-          email,
-          password,
-          options: { emailRedirectTo: `${window.location.origin}${SITE_BASE}/cuenta` },
-        })
-        if (error) throw error
-        return !data.session
+        const u = await signup(email, password)
+        if (u.confirmedAt) setUser(u)
+        return !u.confirmedAt
       },
       signOut: async () => {
-        await supabase.auth.signOut()
+        await logout()
         setUser(null)
       },
-      recover: async (email) => {
-        const { error } = await supabase.auth.resetPasswordForEmail(email, {
-          redirectTo: `${window.location.origin}${SITE_BASE}/cuenta`,
-        })
-        if (error) throw error
-      },
+      recover: (email) => requestPasswordRecovery(email),
       setPassword: async (password) => {
-        const { error } = await supabase.auth.updateUser({ password })
-        if (error) throw error
+        setUser(await updateUser({ password }))
         setRecovering(false)
       },
     }),

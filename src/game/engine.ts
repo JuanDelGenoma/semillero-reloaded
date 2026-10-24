@@ -20,11 +20,11 @@ import {
   startMission,
   trialProspect,
 } from './market'
-import { playMatch, type Side } from './match'
+import { BENCH_SIZE, playMatch, type Side, type SidePlayer } from './match'
 import { departMessiCup, makeMessiCup, messiWeek, setMessiSquadIds } from './messi'
 import { dutyWeek, isWindowWeek, nationalWindow } from './national'
 import { Rng } from './rng'
-import { autoLineup, bestEleven, eligiblePool, unavailability, type Context } from './squad'
+import { autoBench, autoLineup, bestBench, bestEleven, eligiblePool, unavailability, type Context } from './squad'
 import type {
   CategoryId,
   Competition,
@@ -40,14 +40,17 @@ import type {
 import { addNews as news, now, playerName, removePlayer, shortName, yearAge } from './util'
 
 export { currentAge, euros, formatWeek, money, playerName, seasonDate, shortName, yearAge } from './util'
+export { BENCH_SIZE, MAX_SUBS } from './match'
 export {
   UNAVAILABLE_LABEL,
+  autoBench,
   autoLineup,
   bestEleven,
   eligiblePool,
   lineupRating,
   pickedElsewhere,
   unavailability,
+  BENCH_SHAPE,
   type Unavailability,
 } from './squad'
 
@@ -109,6 +112,7 @@ export function newGame(clubId: string, managerName: string): GameState {
     rivals: makeRivals(rng, clubId, FIRST_SEASON),
     matches,
     lineups: {},
+    benches: {},
     news: [],
     seasonOver: false,
     history: [],
@@ -219,15 +223,23 @@ function rivalSide(state: GameState, clubId: string, cat: CategoryId, rng: Rng, 
       .slice(skip[line])
       .slice(0, n)
   const eleven = [...pick('ARQ', 1), ...pick('DEF', 4), ...pick('MED', 3), ...pick('DEL', 3)]
-  return {
-    clubId,
-    players: eleven.map((p) => ({
-      id: p.id,
-      name: p.name,
-      line: p.line,
-      eff: p.ovr,
-    })),
+  const used = new Set(eleven.map((p) => p.id))
+  const rest = squad.filter((p) => !used.has(p.id)).sort((a, b) => b.ovr - a.ovr)
+  const bench = []
+  const gk = rest.find((p) => p.line === 'ARQ')
+  if (gk) bench.push(gk)
+  for (const p of rest) {
+    if (bench.length >= BENCH_SIZE) break
+    if (p.id === gk?.id) continue
+    bench.push(p)
   }
+  const toPlayer = (p: (typeof eleven)[number]): SidePlayer => ({
+    id: p.id,
+    name: p.name,
+    line: p.line,
+    eff: p.ovr,
+  })
+  return { clubId, players: eleven.map(toPlayer), bench: bench.map(toPlayer) }
 }
 
 function applyMatchToUser(state: GameState, rng: Rng, m: Match, eleven: Player[]) {
@@ -235,7 +247,14 @@ function applyMatchToUser(state: GameState, rng: Rng, m: Match, eleven: Player[]
   const afa = m.competition === 'afa'
   const stats = (p: Player) => (afa ? p.stats : p.metroStats)
   const byId = new Map(state.players.map((p) => [p.id, p]))
-  for (const p of eleven) stats(p).apps++
+  const appeared = new Set(eleven.map((p) => p.id))
+  for (const s of m.subs ?? []) {
+    if (s.clubId === state.clubId) appeared.add(s.onId)
+  }
+  for (const id of appeared) {
+    const p = byId.get(id)
+    if (p) stats(p).apps++
+  }
   for (const g of m.goals) {
     if (g.clubId !== state.clubId) continue
     const scorer = byId.get(g.scorerId)
@@ -319,36 +338,51 @@ function develop(state: GameState, rng: Rng, played: Set<string>) {
   }
 }
 
-/** Plays the user's match in one category and competition with the given lineup. */
+function toSidePlayer(p: Player, line: (typeof POSITION_LINE)[Player['position']], rng: Rng, slotPos?: Player['position']): SidePlayer {
+  return {
+    id: p.id,
+    name: shortName(p),
+    line,
+    eff: p.ovr * (slotPos ? positionFit(p.position, slotPos) : 1) + rng.normal(0, 2),
+  }
+}
+
+/** Plays the user's match in one category and competition with the given lineup and bench. */
 function playUserMatch(
   state: GameState,
   rng: Rng,
   m: Match,
   lineup: (string | null)[],
+  bench: (string | null)[],
   ctx: Context,
   taken: Set<string>,
   played: Set<string>,
 ) {
   const eleven: Player[] = []
-  const side: Side = { clubId: state.clubId, players: [] }
+  const side: Side = { clubId: state.clubId, players: [], bench: [] }
   lineup.forEach((id, i) => {
     const p = state.players.find((pl) => pl.id === id)
     if (!p || unavailability(p, ctx)) return
     taken.add(p.id)
     played.add(p.id)
     eleven.push(p)
-    side.players.push({
-      id: p.id,
-      name: shortName(p),
-      line: POSITION_LINE[FORMATION[i].pos],
-      eff: p.ovr * positionFit(p.position, FORMATION[i].pos) + rng.normal(0, 2),
-    })
+    side.players.push(toSidePlayer(p, POSITION_LINE[FORMATION[i].pos], rng, FORMATION[i].pos))
   })
+  for (const id of bench) {
+    const p = state.players.find((pl) => pl.id === id)
+    if (!p || unavailability(p, ctx) || taken.has(p.id)) continue
+    taken.add(p.id)
+    side.bench.push(toSidePlayer(p, POSITION_LINE[p.position], rng))
+  }
   const isHome = m.homeId === state.clubId
   const rivalId = isHome ? m.awayId : m.homeId
   const rival = rivalSide(state, rivalId, m.category, rng, m.competition)
-  playMatch(rng, m, isHome ? side : rival, isHome ? rival : side, (id) => side.players.some((p) => p.id === id))
+  const squadIds = new Set([...side.players, ...side.bench].map((p) => p.id))
+  playMatch(rng, m, isHome ? side : rival, isHome ? rival : side, (id) => squadIds.has(id))
   applyMatchToUser(state, rng, m, eleven)
+  for (const s of m.subs ?? []) {
+    if (s.clubId === state.clubId) played.add(s.onId)
+  }
   const our = isHome ? m.homeGoals : m.awayGoals
   const their = isHome ? m.awayGoals : m.homeGoals
   const verb = our > their ? 'ganó' : our < their ? 'perdió' : 'empató'
@@ -358,6 +392,7 @@ function playUserMatch(
 export function advanceWeek(prev: GameState): GameState {
   if (prev.seasonOver) return prev
   const state = structuredClone(prev)
+  if (!state.benches) state.benches = {}
   const rng = new Rng(state.seed)
   const week = state.week
 
@@ -384,7 +419,11 @@ export function advanceWeek(prev: GameState): GameState {
     // Keep the coach's picks, and cover holes from this category before borrowing younger kids.
     const own = pool.filter((p) => p.category === cat.id || preset.includes(p.id))
     const lineup = bestEleven(pool, taken, bestEleven(own, taken, preset))
-    afaResults.unshift(playUserMatch(state, rng, m, lineup, 'afa', taken, played))
+    const takenAfterXi = new Set([...taken, ...lineup.filter((id): id is string => !!id)])
+    const presetBench = state.benches[cat.id] ?? autoBench(state, cat.id, lineup)
+    const ownBench = pool.filter((p) => p.category === cat.id || presetBench.includes(p.id))
+    const bench = bestBench(pool, takenAfterXi, bestBench(ownBench, takenAfterXi, presetBench))
+    afaResults.unshift(playUserMatch(state, rng, m, lineup, bench, 'afa', taken, played))
   }
 
   // Liga Metro: the kids who didn't play AFA this weekend, foreigners without citizenship included.
@@ -395,7 +434,9 @@ export function advanceWeek(prev: GameState): GameState {
     const pool = eligiblePool(state, cat.id, 'metro').filter((p) => !taken.has(p.id))
     const own = pool.filter((p) => p.category === cat.id)
     const lineup = bestEleven(pool, taken, bestEleven(own, taken, [], 'metro'), 'metro')
-    metroResults.unshift(playUserMatch(state, rng, m, lineup, 'metro', taken, played))
+    const takenAfterXi = new Set([...taken, ...lineup.filter((id): id is string => !!id)])
+    const bench = bestBench(pool, takenAfterXi, [], 'metro')
+    metroResults.unshift(playUserMatch(state, rng, m, lineup, bench, 'metro', taken, played))
   }
 
   for (const m of weekMatches) {
@@ -576,6 +617,7 @@ export function startNextSeason(prev: GameState): GameState {
   state.metroClubs = metroClubs
   state.matches = matches
   state.lineups = {}
+  state.benches = {}
   if (summary) {
     summary.promoted = [...state.promotedThisSeason, ...promoted.map(playerName)]
     summary.newcomers = camada.length

@@ -145,6 +145,7 @@ export function makeAcademy(rng: Rng, club: Club, season: number): Player[] {
   return players
 }
 
+/** Eleven plus a 7-man bench (backup GK and two per outfield line). */
 const RIVAL_LINES: Line[] = [
   'ARQ',
   'ARQ',
@@ -154,6 +155,7 @@ const RIVAL_LINES: Line[] = [
   'DEF',
   'DEF',
   'DEF',
+  'MED',
   'MED',
   'MED',
   'MED',

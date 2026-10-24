@@ -1,5 +1,8 @@
-import { CATEGORIES, FORMATION, canPlayIn, categoryIndex, positionFit } from './categories'
-import type { CategoryId, GameState, Player } from './types'
+import { CATEGORIES, FORMATION, POSITION_LINE, canPlayIn, categoryIndex, positionFit } from './categories'
+import type { CategoryId, GameState, Line, Player } from './types'
+
+/** Backup GK first, then two per outfield line. */
+export const BENCH_SHAPE: Line[] = ['ARQ', 'DEF', 'DEF', 'MED', 'MED', 'DEL', 'DEL']
 
 /** 'cup' is the Messi Cup: the travelling squad plays it while on duty. */
 export type Context = 'afa' | 'metro' | 'cup'
@@ -33,13 +36,68 @@ export function eligiblePool(state: GameState, cat: CategoryId, ctx: Context = '
   )
 }
 
-/** Which other category's lineup a player is currently picked in, if any. */
+/** Which other category's lineup or bench a player is currently picked in, if any. */
 export function pickedElsewhere(state: GameState, playerId: string, cat: CategoryId) {
   for (const c of CATEGORIES) {
     if (c.id === cat) continue
-    if (state.lineups[c.id]?.includes(playerId)) return c.id
+    if (state.lineups[c.id]?.includes(playerId) || state.benches[c.id]?.includes(playerId)) return c.id
   }
   return null
+}
+
+function takenByOtherCategories(state: GameState, cat: CategoryId) {
+  const taken = new Set<string>()
+  for (const c of CATEGORIES) {
+    if (c.id === cat) continue
+    for (const id of state.lineups[c.id] ?? []) if (id) taken.add(id)
+    for (const id of state.benches[c.id] ?? []) if (id) taken.add(id)
+  }
+  return taken
+}
+
+export function bestBench(
+  pool: Player[],
+  taken: Set<string> = new Set(),
+  preset: (string | null)[] = [],
+  ctx: Context = 'afa',
+): (string | null)[] {
+  const used = new Set(taken)
+  const byId = new Map(pool.map((p) => [p.id, p]))
+  const slots: (string | null)[] = BENCH_SHAPE.map((_, i) => {
+    const id = preset[i]
+    const p = id ? byId.get(id) : undefined
+    if (id && p && !unavailability(p, ctx) && !used.has(id)) {
+      used.add(id)
+      return id
+    }
+    return null
+  })
+  const fill = (exact: boolean) => {
+    BENCH_SHAPE.forEach((line, i) => {
+      if (slots[i]) return
+      let best: Player | null = null
+      for (const p of pool) {
+        if (used.has(p.id) || unavailability(p, ctx)) continue
+        if (exact && POSITION_LINE[p.position] !== line) continue
+        if (!best || p.ovr > best.ovr) best = p
+      }
+      if (best) {
+        slots[i] = best.id
+        used.add(best.id)
+      }
+    })
+  }
+  fill(true)
+  fill(false)
+  return slots
+}
+
+export function autoBench(state: GameState, cat: CategoryId, lineup: (string | null)[] = state.lineups[cat] ?? []) {
+  const taken = takenByOtherCategories(state, cat)
+  for (const id of lineup) if (id) taken.add(id)
+  const own = eligiblePool(state, cat).filter((p) => p.category === cat)
+  const first = bestBench(own, taken)
+  return bestBench(eligiblePool(state, cat), taken, first)
 }
 
 /** Greedy best eleven for the 4-3-3, respecting who is already taken. */
@@ -90,11 +148,7 @@ export function bestEleven(
 }
 
 export function autoLineup(state: GameState, cat: CategoryId) {
-  const taken = new Set<string>()
-  for (const c of CATEGORIES) {
-    if (c.id === cat) continue
-    for (const id of state.lineups[c.id] ?? []) if (id) taken.add(id)
-  }
+  const taken = takenByOtherCategories(state, cat)
   // Prefer players registered in this category; borrow from below only to fill gaps.
   const own = eligiblePool(state, cat).filter((p) => p.category === cat)
   const first = bestEleven(own, taken)
