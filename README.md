@@ -1,6 +1,6 @@
 # Semillero Reloaded
 
-Prueba este codigo
+Simulador de las categorias inferiores argentinas
 
 This project was built with [Lovable](https://lovable.dev).
 
